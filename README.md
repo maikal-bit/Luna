@@ -87,8 +87,8 @@ Unlike traditional chatbots or rigid voice assistants, Luna features:
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/Luna-Assistant.git
-cd Luna-Assistant
+git clone https://github.com/maikal-bit/Luna.git
+cd Luna
 ```
 
 ### 2. Set Up Virtual Environment (Recommended)
