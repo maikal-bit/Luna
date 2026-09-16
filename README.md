@@ -85,11 +85,13 @@ Unlike traditional chatbots or rigid voice assistants, Luna features:
 
 ## ⚡ Quick Start
 
-### 1. Clone the Repository
+### 1. Clone & Navigate into the Folder
 ```bash
 git clone https://github.com/maikal-bit/Luna.git
 cd Luna
 ```
+> [!IMPORTANT]
+> Make sure to navigate into the project directory with **`cd Luna`** before running the next commands!
 
 ### 2. Set Up Virtual Environment (Recommended)
 ```bash
