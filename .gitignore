@@ -1,0 +1,42 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# Secrets, Credentials & Local Configuration
+config/api_keys.json
+config/certs/
+*.key
+*.pem
+*.crt
+.env
+.env.*
+
+# User Memory & Session Data (Keeps user data private)
+memory/long_term.json
+memory/long_term.json.tmp
+uploads/
+*.log
+
+# Operating System & IDE Files
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Temporary & Test Files
+scratch/
+test_*.py

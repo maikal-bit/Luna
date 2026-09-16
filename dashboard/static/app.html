@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LUNA // Command Nexus</title>
+  <script src="/crypto-js.min.js"></script>
+  <style>
+    :root {
+      --bg: #00060a;
+      --panel: #010d14;
+      --panel-alt: #011520;
+      --border: #0d3347;
+      --border-b: #1a5c7a;
+      --border-glow: #00d4ff;
+      --text: #8ffcff;
+      --text-dim: #3a8a9a;
+      --text-med: #5ab8cc;
+      --text-white: #d8f8ff;
+      --accent: #ff6b00;
+      --green: #00ff88;
+      --red: #ff3355;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Courier New", monospace; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    /* Header */
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand-core {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--border-glow);
+      box-shadow: 0 0 12px var(--border-glow);
+    }
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--text-white);
+    }
+    .brand-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border: 1px solid var(--border-b);
+      border-radius: 4px;
+      color: var(--text-dim);
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-icon {
+      background: rgba(0, 212, 255, 0.08);
+      border: 1px solid var(--border);
+      color: var(--text-med);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .btn-icon:hover {
+      border-color: var(--border-glow);
+      color: var(--text-white);
+      box-shadow: 0 0 10px rgba(0,212,255,0.2);
+    }
+    .btn-icon.active {
+      background: rgba(255, 107, 0, 0.2);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 12px rgba(255,107,0,0.4);
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--red);
+      transition: background 0.3s;
+    }
+    .status-dot.connected {
+      background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+    }
+
+    /* Main Container */
+    .container {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+    .chat-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      overflow: hidden;
+    }
+    .messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      scroll-behavior: smooth;
+    }
+    .msg {
+      max-width: 85%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      line-height: 1.5;
+      word-break: break-word;
+      animation: fadeIn 0.25s ease-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .msg.user {
+      align-self: flex-end;
+      background: rgba(0, 212, 255, 0.12);
+      border: 1px solid var(--border-glow);
+      color: var(--text-white);
+      border-bottom-right-radius: 2px;
+    }
+    .msg.agent {
+      align-self: flex-start;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      color: var(--text-white);
+      border-bottom-left-radius: 2px;
+    }
+    .msg.sys {
+      align-self: center;
+      background: rgba(1, 21, 32, 0.6);
+      border: 1px dashed var(--border);
+      color: var(--text-dim);
+      font-size: 11px;
+      text-align: center;
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+    .msg.file {
+      align-self: flex-start;
+      background: rgba(0, 255, 136, 0.08);
+      border: 1px solid rgba(0, 255, 136, 0.3);
+      color: var(--green);
+    }
+    .msg-author {
+      font-size: 10px;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    /* Input Bar */
+    .input-bar {
+      padding: 12px 18px;
+      background: var(--panel);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .cmd-input {
+      flex: 1;
+      padding: 12px 16px;
+      background: var(--panel-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-white);
+      font-size: 14px;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .cmd-input:focus {
+      border-color: var(--border-glow);
+      box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+    }
+    .btn-send {
+      padding: 12px 20px;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(0, 122, 153, 0.4));
+      border: 1px solid var(--border-glow);
+      color: var(--text-white);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-send:hover {
+      background: rgba(0, 212, 255, 0.35);
+      box-shadow: 0 0 15px rgba(0,212,255,0.4);
+    }
+
+    /* Drawer / Side files */
+    .side-panel {
+      width: 280px;
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+    }
+    @media (max-width: 768px) {
+      .side-panel {
+        position: absolute;
+        right: 0; top: 0; bottom: 0;
+        z-index: 10;
+        transform: translateX(100%);
+        box-shadow: -10px 0 30px rgba(0,0,0,0.8);
+      }
+      .side-panel.open {
+        transform: translateX(0);
+      }
+    }
+    .side-header {
+      padding: 14px;
+      border-bottom: 1px solid var(--border);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      font-weight: 700;
+      color: var(--text-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .file-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .file-item {
+      padding: 8px 10px;
+      background: var(--panel-alt);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      text-decoration: none;
+      color: var(--text-med);
+      transition: all 0.2s;
+    }
+    .file-item:hover {
+      border-color: var(--border-glow);
+      color: var(--text-white);
+    }
+    .file-size {
+      font-size: 9px;
+      color: var(--text-dim);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-core"></div>
+      <div class="brand-title">LUNA</div>
+      <div class="brand-badge">HUD // __IP__:__PORT__</div>
+    </div>
+    <div class="header-actions">
+      <div id="connStatus" class="status-dot" title="WebSocket status"></div>
+      <button id="micBtn" class="btn-icon" title="Stream Phone Mic">🎙️ <span>Mic</span></button>
+      <button id="wakeBtn" class="btn-icon" title="Wake Luna">⚡ <span>Wake</span></button>
+      <label class="btn-icon" style="cursor: pointer;" title="Upload File">
+        📁 <span>Upload</span>
+        <input type="file" id="fileInput" style="display: none;">
+      </label>
+      <button id="filesToggle" class="btn-icon">📦 <span>Files</span></button>
+      <button id="logoutBtn" class="btn-icon">🚪</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="chat-panel">
+      <div id="messages" class="messages">
+        <div class="msg sys">LUNA Command Nexus Initialized. Real-time telemetry active.</div>
+      </div>
+      <div class="input-bar">
+        <input type="text" id="cmdInput" class="cmd-input" placeholder="Transmit instruction to LUNA…" autocomplete="off">
+        <button id="sendBtn" class="btn-send">Send</button>
+      </div>
+    </div>
+
+    <div id="sidePanel" class="side-panel">
+      <div class="side-header">
+        <span>SHARED FILES</span>
+        <button id="refreshFilesBtn" class="btn-icon" style="padding: 2px 6px;">↻</button>
+      </div>
+      <div id="fileList" class="file-list">
+        <div style="font-size: 11px; color: var(--text-dim); text-align: center; padding: 20px;">No files shared yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let token = sessionStorage.getItem('luna_token') || sessionStorage.getItem('jarvis_token');
+    const deviceToken = localStorage.getItem('luna_device_token') || localStorage.getItem('jarvis_device_token');
+    let sessionKey = sessionStorage.getItem('luna_key') || sessionStorage.getItem('jarvis_key');
+
+    const messagesEl = document.getElementById('messages');
+    const cmdInput = document.getElementById('cmdInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const connStatus = document.getElementById('connStatus');
+    const micBtn = document.getElementById('micBtn');
+    const wakeBtn = document.getElementById('wakeBtn');
+    const fileInput = document.getElementById('fileInput');
+    const filesToggle = document.getElementById('filesToggle');
+    const sidePanel = document.getElementById('sidePanel');
+    const fileList = document.getElementById('fileList');
+    const refreshFilesBtn = document.getElementById('refreshFilesBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    let ws = null;
+    let micStream = null;
+    let micWs = null;
+
+    async function ensureAuth() {
+      if (!token && deviceToken) {
+        try {
+          const res = await fetch('/api/device-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ device_token: deviceToken })
+          });
+          const data = await res.json();
+          if (res.ok && data.ok) {
+            token = data.token;
+            sessionKey = data.key;
+            sessionStorage.setItem('luna_token', token);
+            sessionStorage.setItem('jarvis_token', token);
+            sessionStorage.setItem('luna_key', sessionKey);
+            sessionStorage.setItem('jarvis_key', sessionKey);
+          }
+        } catch (e) {}
+      }
+      if (!token) {
+        location.replace('/login');
+        return false;
+      }
+      return true;
+    }
+
+    function addMessage(type, text, author) {
+      const msg = document.createElement('div');
+      msg.className = `msg ${type}`;
+      if (author) {
+        const auth = document.createElement('div');
+        auth.className = 'msg-author';
+        auth.textContent = author;
+        msg.appendChild(auth);
+      }
+      const body = document.createElement('div');
+      body.textContent = text;
+      msg.appendChild(body);
+      messagesEl.appendChild(msg);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+
+    function connectWs() {
+      if (!token) return;
+      const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+      ws = new WebSocket(`${proto}//${location.host}/ws?token=${encodeURIComponent(token)}`);
+
+      ws.onopen = () => {
+        connStatus.classList.add('connected');
+      };
+
+      ws.onclose = () => {
+        connStatus.classList.remove('connected');
+        setTimeout(connectWs, 3000);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'user') {
+            addMessage('user', data.text, 'YOU');
+          } else if (data.type === 'agent') {
+            addMessage('agent', data.text, 'LUNA');
+          } else if (data.type === 'sys') {
+            addMessage('sys', data.text);
+          } else if (data.type === 'file_received') {
+            addMessage('file', `Shared file: ${data.name} (${(data.size / 1024).toFixed(1)} KB)`, 'TRANSFER');
+            loadFiles();
+          }
+        } catch (err) {
+          console.error(err);
+        }
+      };
+    }
+
+    function sendCommand() {
+      const text = cmdInput.value.trim();
+      if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+      ws.send(JSON.stringify({ type: 'command', text: text }));
+      addMessage('user', text, 'YOU');
+      cmdInput.value = '';
+    }
+
+    sendBtn.addEventListener('click', sendCommand);
+    cmdInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') sendCommand();
+    });
+
+    wakeBtn.addEventListener('click', async () => {
+      try {
+        await fetch('/api/wake', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        addMessage('sys', 'Wake signal broadcasted to LUNA.');
+      } catch (e) {}
+    });
+
+    // ── Phone Microphone Streaming ──────────────────────────────────────────
+    async function toggleMic() {
+      if (micStream) {
+        // Stop streaming
+        if (micWs) { micWs.close(); micWs = null; }
+        micStream.getTracks().forEach(t => t.stop());
+        micStream = null;
+        micBtn.classList.remove('active');
+        addMessage('sys', 'Phone microphone deactivated.');
+      } else {
+        try {
+          micStream = await navigator.mediaDevices.getUserMedia({ audio: { sampleRate: 16000, channelCount: 1 } });
+          const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+          micWs = new WebSocket(`${proto}//${location.host}/ws/phone-audio?token=${encodeURIComponent(token)}`);
+          micWs.binaryType = 'arraybuffer';
+
+          micWs.onopen = () => {
+            micBtn.classList.add('active');
+            addMessage('sys', 'Phone microphone live. Speak to LUNA.');
+
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+            const source = audioCtx.createMediaStreamSource(micStream);
+            const processor = audioCtx.createScriptProcessor(4096, 1, 1);
+
+            processor.onaudioprocess = (e) => {
+              if (micWs && micWs.readyState === WebSocket.OPEN) {
+                const inputData = e.inputBuffer.getChannelData(0);
+                const pcm16 = new Int16Array(inputData.length);
+                for (let i = 0; i < inputData.length; i++) {
+                  let s = Math.max(-1, Math.min(1, inputData[i]));
+                  pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                }
+                micWs.send(pcm16.buffer);
+              }
+            };
+            source.connect(processor);
+            processor.connect(audioCtx.destination);
+          };
+
+          micWs.onclose = () => {
+            if (micStream) toggleMic();
+          };
+        } catch (err) {
+          alert('Microphone access denied or unavailable: ' + err.message);
+        }
+      }
+    }
+    micBtn.addEventListener('click', toggleMic);
+
+    // ── File Upload ────────────────────────────────────────────────────────
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files[0];
+      if (!file) return;
+      const formData = new FormData();
+      formData.append('file', file);
+      addMessage('sys', `Uploading ${file.name}…`);
+      try {
+        const res = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        });
+        const data = await res.json();
+        if (res.ok && data.ok) {
+          addMessage('sys', `✅ Uploaded ${data.name}`);
+          loadFiles();
+        } else {
+          addMessage('sys', `❌ Upload failed: ${data.error || 'Server error'}`);
+        }
+      } catch (err) {
+        addMessage('sys', `❌ Upload error: ${err.message}`);
+      }
+      fileInput.value = '';
+    });
+
+    // ── File List ──────────────────────────────────────────────────────────
+    async function loadFiles() {
+      try {
+        const res = await fetch('/api/files', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (data.files && data.files.length) {
+          fileList.innerHTML = '';
+          data.files.forEach(f => {
+            const a = document.createElement('a');
+            a.className = 'file-item';
+            a.href = `/uploads/${encodeURIComponent(f.name)}?token=${encodeURIComponent(token)}`;
+            a.download = f.name;
+            a.innerHTML = `<span>${f.name}</span><span class="file-size">${(f.size/1024).toFixed(1)} KB</span>`;
+            fileList.appendChild(a);
+          });
+        } else {
+          fileList.innerHTML = '<div style="font-size: 11px; color: var(--text-dim); text-align: center; padding: 20px;">No files shared yet.</div>';
+        }
+      } catch (e) {}
+    }
+
+    filesToggle.addEventListener('click', () => {
+      sidePanel.classList.toggle('open');
+      loadFiles();
+    });
+    refreshFilesBtn.addEventListener('click', loadFiles);
+
+    logoutBtn.addEventListener('click', () => {
+      sessionStorage.clear();
+      localStorage.removeItem('luna_device_token');
+      localStorage.removeItem('jarvis_device_token');
+      location.replace('/login');
+    });
+
+    (async () => {
+      if (await ensureAuth()) {
+        connectWs();
+        loadFiles();
+      }
+    })();
+  </script>
+</body>
+</html>

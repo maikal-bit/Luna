@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LUNA // Security Access</title>
+  <style>
+    :root {
+      --bg: #00060a;
+      --panel: #010d14;
+      --border: #0d3347;
+      --border-glow: #00d4ff;
+      --text: #8ffcff;
+      --text-dim: #3a8a9a;
+      --text-white: #d8f8ff;
+      --accent: #ff6b00;
+      --red: #ff3355;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Courier New", monospace; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow: hidden;
+      position: relative;
+    }
+    /* Subtle background grid */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.05) 0%, transparent 70%),
+                  linear-gradient(rgba(13, 51, 71, 0.15) 1px, transparent 1px),
+                  linear-gradient(90deg, rgba(13, 51, 71, 0.15) 1px, transparent 1px);
+      background-size: 100% 100%, 30px 30px, 30px 30px;
+      pointer-events: none;
+    }
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 380px;
+      padding: 32px 28px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(0,212,255,0.1);
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .arc-node {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 20px;
+      border: 2px solid var(--border-glow);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 25px rgba(0, 212, 255, 0.35), inset 0 0 15px rgba(0, 212, 255, 0.2);
+      animation: pulse 3s infinite ease-in-out;
+    }
+    .arc-node::after {
+      content: '';
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--border-glow);
+      box-shadow: 0 0 15px var(--border-glow);
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.9; }
+      50% { transform: scale(1.05); opacity: 1; box-shadow: 0 0 35px rgba(0,212,255,0.6); }
+    }
+    h1 {
+      font-size: 20px;
+      letter-spacing: 4px;
+      color: var(--text-white);
+      margin-bottom: 6px;
+      font-weight: 700;
+    }
+    .subtitle {
+      font-size: 12px;
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+    }
+    .pin-input {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(0, 10, 16, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-white);
+      font-size: 22px;
+      letter-spacing: 8px;
+      text-align: center;
+      text-transform: uppercase;
+      outline: none;
+      transition: all 0.2s ease;
+      margin-bottom: 20px;
+    }
+    .pin-input:focus {
+      border-color: var(--border-glow);
+      box-shadow: 0 0 15px rgba(0, 212, 255, 0.25);
+    }
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, rgba(0, 212, 255, 0.15), rgba(0, 122, 153, 0.3));
+      border: 1px solid var(--border-glow);
+      border-radius: 8px;
+      color: var(--text-white);
+      font-size: 13px;
+      letter-spacing: 2px;
+      font-weight: 600;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      background: rgba(0, 212, 255, 0.3);
+      box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
+      transform: translateY(-1px);
+    }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .status {
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--red);
+      min-height: 18px;
+    }
+    .instructions {
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(13, 51, 71, 0.5);
+      font-size: 11px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="arc-node"></div>
+    <h1>LUNA PROTOCOL</h1>
+    <div class="subtitle">Remote Security Gate</div>
+
+    <input type="text" id="pin" class="pin-input" placeholder="••••••" maxlength="6" autofocus autocomplete="off" autocorrect="off" autocapitalize="characters">
+    <button id="submitBtn" class="btn">Connect Session</button>
+
+    <div id="status" class="status"></div>
+
+    <div class="instructions">
+      Click <strong>Remote Control</strong> on the desktop LUNA interface to view your 6-character access key or scan QR code.
+    </div>
+  </div>
+
+  <script>
+    const pinInput = document.getElementById('pin');
+    const submitBtn = document.getElementById('submitBtn');
+    const statusEl = document.getElementById('status');
+
+    async function tryLogin() {
+      const pin = pinInput.value.trim().toUpperCase();
+      if (!pin) {
+        statusEl.textContent = 'Please enter an access key.';
+        return;
+      }
+      submitBtn.disabled = true;
+      statusEl.style.color = 'var(--text-dim)';
+      statusEl.textContent = 'Verifying security credentials…';
+
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pin })
+        });
+        const data = await res.json();
+        if (res.ok && data.ok) {
+          sessionStorage.setItem('luna_token', data.token);
+          sessionStorage.setItem('jarvis_token', data.token);
+          sessionStorage.setItem('luna_key', pin);
+          sessionStorage.setItem('jarvis_key', pin);
+          statusEl.style.color = 'var(--text)';
+          statusEl.textContent = 'Access granted. Initializing…';
+          setTimeout(() => location.replace('/'), 300);
+        } else {
+          statusEl.style.color = 'var(--red)';
+          statusEl.textContent = data.error || 'Invalid or expired key.';
+          submitBtn.disabled = false;
+        }
+      } catch (err) {
+        statusEl.style.color = 'var(--red)';
+        statusEl.textContent = 'Connection failed. Check host network.';
+        submitBtn.disabled = false;
+      }
+    }
+
+    submitBtn.addEventListener('click', tryLogin);
+    pinInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') tryLogin();
+    });
+  </script>
+</body>
+</html>
